@@ -1,7 +1,7 @@
 import numpy as np
 from constants import *
 
-lambdaIndex = 5
+lambdaIndex = 0
 seriesLen = LAMBDAS[lambdaIndex] * SIMULATIONTIME
 
 
