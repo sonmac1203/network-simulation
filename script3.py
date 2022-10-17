@@ -2,28 +2,29 @@
 
 import numpy as np
 from station import Station
-from medium import Medium
+from medium3 import Medium3
 from constants import *
 
-lambdaIndex = 0
-seriesLen = LAMBDAS[lambdaIndex] * SIMULATIONTIME
+seriesLen = LAMBDAS[LAMBDAINDEX] * SIMULATIONTIME
 
 stationA = Station()
 stationC = Station()
-stationB = Medium()
+stationB = Medium3()
 
 globalTimeA = 0
 globalTimeC = 0
 collisions = 0
 
-while globalTimeA <= SIMULATIONTIME // SLOTTIME or globalTimeC <= SIMULATIONTIME // SLOTTIME:
+while (globalTimeA <= SIMULATIONTIME // SLOTTIME or globalTimeC <= SIMULATIONTIME // SLOTTIME) and (
+    stationA.getIndexVal() < seriesLen or stationC.getIndexVal() < seriesLen
+):
 
-    packetArrivesFromA = stationA.getIndex() < seriesLen
-    packetArrivesFromC = stationC.getIndex() < seriesLen
+    packetArrivesFromA = stationA.getIndexVal() < seriesLen
+    packetArrivesFromC = stationC.getIndexVal() < seriesLen
 
     # If a packet from A arrives
     if packetArrivesFromA:
-        globalTimeA = stationA.getArrivals()[stationA.getIndex()]
+        globalTimeA = stationA.getArrivals()[stationA.getIndexVal()]
         if globalTimeA <= SIMULATIONTIME // SLOTTIME:  # If still within simulation time
             backOffA = stationA.getBackOff()
             stationB.recordsStationADoesTransmit()
@@ -31,7 +32,7 @@ while globalTimeA <= SIMULATIONTIME // SLOTTIME or globalTimeC <= SIMULATIONTIME
 
     # If a packet from C arrives
     if packetArrivesFromC:
-        globalTimeC = stationC.getArrivals()[stationC.getIndex()]
+        globalTimeC = stationC.getArrivals()[stationC.getIndexVal()]
         if globalTimeC <= SIMULATIONTIME // SLOTTIME:  # If still within simulation time
             backOffC = stationC.getBackOff()
             stationB.recordsStationCDoesTransmit()
