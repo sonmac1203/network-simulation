@@ -3,7 +3,7 @@ from station import Station
 from constants import *
 
 
-class Medium:
+class Medium3:
     def __init__(self):
         self.occupied = False
         self.periodOccupiedByA = []
