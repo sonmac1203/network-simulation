@@ -1,12 +1,12 @@
 import numpy as np
 from constants import *
 
-lambdaIndex = 0
-seriesLen = LAMBDAS[lambdaIndex] * SIMULATIONTIME
+LAMBDA = LAMBDAS[LAMBDAINDEX]
+seriesLen = LAMBDA * SIMULATIONTIME
 
 
 def expo(num):
-    return (-1 / SIMULATIONTIME) * np.log(1 - num)
+    return (-1 / LAMBDA) * np.log(1 - num)
 
 
 class Station:
@@ -14,7 +14,7 @@ class Station:
         self.backOff = 0
         self.CW = MIN_CW
         self.successes = 0
-        self.index = 0
+        self.indexVal = 0
         self.backOffFrozen = False
 
         # Generate random set for A and C
@@ -48,6 +48,9 @@ class Station:
     def freezeBackOff(self):
         self.backOffFrozen = True
 
+    def freeBackOff(self):
+        self.backOffFrozen = False
+
     def setCW(self, newCW):
         self.CW = newCW
 
@@ -72,11 +75,11 @@ class Station:
     def getSuccesses(self):
         return self.successes
 
-    def getIndex(self):
-        return self.index
+    def getIndexVal(self):
+        return self.indexVal
 
     def jump(self):
-        self.index += 1
+        self.indexVal += 1
 
     def collide(self, globalTime):
         totalTime = DIFS + self.backOff + FRAME + SIFS
