@@ -2,6 +2,8 @@ import numpy as np
 from station import Station
 from constants import *
 
+seriesLen = LAMBDAS[LAMBDAINDEX] * SIMULATIONTIME
+
 stationA = Station()
 stationC = Station()
 
@@ -11,47 +13,98 @@ upper = Station()
 globalTime = 0
 collisions = 0
 
-def transmitJob(station: Station):
-    station.recordASuccess()
-    station.jump()
-    station.resetCW()
+# print(stationA.getArrivals()[:10])
+# print(stationC.getArrivals()[:10])
 
-def transmitJobWithFreezingBackoff(station1: Station, station2: Station, arrival1, backoff1, arrival2, backoff2):
-    transmitJob(station1)
-    station2.freezeBackOff()
-    diff = arrival2 + backoff2 - arrival1 - backoff1
-    station2.setBackOff(diff)
+testA = [20, 1000, 2000]
+testC = [23, 1007, 3000]
 
-while globalTime <= SIMULATIONTIME // SLOTTIME:
-    arrivalA = stationA.getArrivals()[stationA.getIndex()]
-    arrivalC = stationC.getArrivals()[stationC.getIndex()]
 
-    backOffA = stationA.getBackOff()
-    backOffC = stationC.getBackOff()
+while (
+    globalTime <= SIMULATIONTIME // SLOTTIME
+    and stationA.getIndexVal() < seriesLen
+    and stationC.getIndexVal() < seriesLen
+):
 
-    timeA = arrivalA + DIFS + backOffA
-    timeC = arrivalC + DIFS + backOffC
+    arrivalTimeA = stationA.getArrivals()[stationA.getIndexVal()]
+    arrivalTimeC = stationC.getArrivals()[stationC.getIndexVal()]
 
-    if timeA + globalTime < timeC:
-        """A finsihes before C"""
-        globalTime = stationA.transmit(globalTime)
-        transmitJob(stationA)
-        stationC.doubleCW()
-        stationC.jump()
-    elif timeC + globalTime < timeA:
-        """C finshes before A"""
-        globalTime = stationC.transmit(globalTime)
-        transmitJob(stationC)
-        stationA.doubleCW()
-        stationA.jump()
+    if arrivalTimeA <= arrivalTimeC:
+        lower = stationA
+        upper = stationC
     else:
-        """A collision happens"""
-        globalTime = stationA.transmit(globalTime)
-        stationA.doubleCW()
-        stationA.jump()
-        stationC.doubleCW()
-        stationC.jump()
-        collisions += 1
+        lower = stationC
+        upper = stationA
+
+    arrivalLower = min(arrivalTimeA, arrivalTimeC)
+    arrivalUpper = max(arrivalTimeA, arrivalTimeC)
+
+    if globalTime >= min(arrivalLower, arrivalUpper):
+        arrivalLower = globalTime
+    elif globalTime < min(arrivalLower, arrivalUpper):
+        globalTime = arrivalLower
+
+    backOffLower = lower.getBackOff()
+    backOffUpper = upper.getBackOff()
+
+    if arrivalLower + DIFS + backOffLower < arrivalUpper + DIFS:
+        """Lower transmits successfully"""
+        lower.recordASuccess()
+        lower.resetCW()
+        lower.freeBackOff()
+        lower.jump()
+
+        """Upper might also be able to transmit"""
+        transmissionSpan = arrivalLower + DIFS + backOffLower + RTS + SIFS + CTS + SIFS + FRAME + SIFS + ACK
+        if arrivalUpper >= transmissionSpan:
+            """Upper transmits successfully"""
+            upper.recordASuccess()
+            upper.resetCW()
+            upper.freeBackOff()
+            upper.jump()
+        else:
+            globalTime = transmissionSpan
+    else:
+        if arrivalLower + DIFS + backOffLower > arrivalUpper + DIFS + backOffUpper:
+            """Upper transmits successfully"""
+            upper.recordASuccess()
+            upper.resetCW()
+            upper.freeBackOff()
+            upper.jump()
+            """Lower freezes counter"""
+            lower.freezeBackOff()
+            lower.setBackOff(arrivalLower + backOffLower - arrivalUpper - backOffUpper)
+
+            # Since the counter freezes, we want to start transmit right after this round
+            globalTime += DIFS + backOffUpper + RTS + SIFS + CTS + SIFS + FRAME + SIFS + ACK
+        elif arrivalLower + DIFS + backOffLower < arrivalUpper + DIFS + backOffUpper:
+            """Lower transmits successfully"""
+            lower.recordASuccess()
+            lower.resetCW()
+            lower.freeBackOff()
+            lower.jump()
+            """Upper freezes counter"""
+            upper.freezeBackOff()
+            upper.setBackOff(arrivalUpper + backOffUpper - arrivalLower - backOffLower)
+            # Since the counter freezes, we want to start transmit right after this round
+            globalTime += DIFS + backOffLower + RTS + SIFS + CTS + SIFS + FRAME + SIFS + ACK
+        else:
+            """A collision happens"""
+            collisions += 1
+            lower.jump()
+            lower.freeBackOff()
+            lower.doubleCW()
+            upper.jump()
+            upper.freeBackOff()
+            upper.doubleCW()
+
+    # Assign back to A and C
+    if arrivalTimeA <= arrivalTimeC:
+        stationA = lower
+        stationC = upper
+    else:
+        stationC = lower
+        stationA = upper
 
 print("\nNumber at successes at station A: " + str(stationA.getSuccesses()) + "\n")
 print("Number at successes at station C: " + str(stationC.getSuccesses()) + "\n")
