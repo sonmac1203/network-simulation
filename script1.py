@@ -2,6 +2,8 @@ import numpy as np
 from station import Station
 from constants import *
 
+seriesLen = LAMBDAS[LAMBDAINDEX] * SIMULATIONTIME
+
 stationA = Station()
 stationC = Station()
 
@@ -26,9 +28,13 @@ def transmitJobWithFreezingBackoff(station1: Station, station2: Station, arrival
     station2.setBackOff(diff)
 
 
-while globalTime <= SIMULATIONTIME // SLOTTIME:
-    arrivalA = stationA.getArrivals()[stationA.getIndex()]
-    arrivalC = stationC.getArrivals()[stationC.getIndex()]
+while (
+    globalTime <= SIMULATIONTIME // SLOTTIME
+    and stationA.getIndexVal() < seriesLen
+    and stationC.getIndexVal() < seriesLen
+):
+    arrivalA = stationA.getArrivals()[stationA.getIndexVal()]
+    arrivalC = stationC.getArrivals()[stationC.getIndexVal()]
 
     if arrivalA <= arrivalC:
         lower = stationA
@@ -37,8 +43,8 @@ while globalTime <= SIMULATIONTIME // SLOTTIME:
         lower = stationC
         upper = stationA
 
-    arrivalLower = lower.getArrivals()[lower.getIndex()]
-    arrivalUpper = upper.getArrivals()[upper.getIndex()]
+    arrivalLower = lower.getArrivals()[lower.getIndexVal()]
+    arrivalUpper = upper.getArrivals()[upper.getIndexVal()]
 
     if globalTime >= min(arrivalLower, arrivalUpper):
         arrivalLower = globalTime
