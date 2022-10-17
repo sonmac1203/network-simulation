@@ -24,13 +24,17 @@ testC = [0, 1007, 3000]
 # print("\n")
 # print(stationC.getArrivals()[:10])
 
-while globalTime <= SIMULATIONTIME // SLOTTIME and stationA.getIndex() < seriesLen and stationC.getIndex() < seriesLen:
+while (
+    globalTime <= SIMULATIONTIME // SLOTTIME
+    and stationA.getIndexVal() < seriesLen
+    and stationC.getIndexVal() < seriesLen
+):
 
-    arrivalTimeA = stationA.getArrivals()[stationA.getIndex()]
-    arrivalTimeC = stationC.getArrivals()[stationC.getIndex()]
+    arrivalTimeA = stationA.getArrivals()[stationA.getIndexVal()]
+    arrivalTimeC = stationC.getArrivals()[stationC.getIndexVal()]
 
-    # arrivalTimeA = testA[stationA.getIndex()]
-    # arrivalTimeC = testC[stationC.getIndex()]
+    # arrivalTimeA = testA[stationA.getIndexVal()]
+    # arrivalTimeC = testC[stationC.getIndexVal()]
 
     if arrivalTimeA <= arrivalTimeC:
         lower = stationA
@@ -90,7 +94,6 @@ while globalTime <= SIMULATIONTIME // SLOTTIME and stationA.getIndex() < seriesL
                 upper.freeBackOff()
                 upper.jump()
             else:
-                # still error here
                 if arrivalLower + DIFS + backOffLower + RTS + SIFS + CTS >= arrivalUpper + DIFS:
                     """Upper freezes the backoff"""
                     upper.freezeBackOff()
