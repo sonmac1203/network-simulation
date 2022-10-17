@@ -26,4 +26,34 @@ while globalTime <= SIMULATIONTIME // SLOTTIME:
     arrivalA = stationA.getArrivals()[stationA.getIndex()]
     arrivalC = stationC.getArrivals()[stationC.getIndex()]
 
-    
+    backOffA = stationA.getBackOff()
+    backOffC = stationC.getBackOff()
+
+    timeA = arrivalA + DIFS + backOffA
+    timeC = arrivalC + DIFS + backOffC
+
+    if timeA + globalTime < timeC:
+        """A finsihes before C"""
+        globalTime = stationA.transmit(globalTime)
+        transmitJob(stationA)
+        stationC.doubleCW()
+        stationC.jump()
+    elif timeC + globalTime < timeA:
+        """C finshes before A"""
+        globalTime = stationC.transmit(globalTime)
+        transmitJob(stationC)
+        stationA.doubleCW()
+        stationA.jump()
+    else:
+        """A collision happens"""
+        globalTime = stationA.transmit(globalTime)
+        stationA.doubleCW()
+        stationA.jump()
+        stationC.doubleCW()
+        stationC.jump()
+        collisions += 1
+
+print("\nNumber at successes at station A: " + str(stationA.getSuccesses()) + "\n")
+print("Number at successes at station C: " + str(stationC.getSuccesses()) + "\n")
+print("Number of collisions: " + str(collisions) + "\n")
+print("Actual simulation time: " + str(globalTime * SLOTTIME) + "\n")
