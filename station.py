@@ -32,6 +32,18 @@ class Station:
             arrivalTimes.append(sum(slotsSet[: i + 1]))
 
         self.arrivals = arrivalTimes
+        self.arrivalTime = 0
+
+    def setArrivals(self, arr):
+        self.arrivals = arr
+
+    def setArrivalTime(self, value):
+        self.arrivalTime = value
+
+    def getArrivalTime(self):
+        if self.backOffFrozen:
+            return self.arrivalTime
+        return self.arrivals[self.indexVal]
 
     def getArrivals(self):
         return self.arrivals
@@ -39,10 +51,13 @@ class Station:
     def setBackOff(self, value):
         self.backOff = value
 
-    def getBackOff(self):
+    def generateBackOff(self):
         randomNumber = np.random.randint(self.CW)
         if self.backOffFrozen is not True:
             self.setBackOff(randomNumber)
+        return self.backOff
+
+    def getBackOff(self):
         return self.backOff
 
     def freezeBackOff(self):
