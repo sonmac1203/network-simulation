@@ -44,8 +44,8 @@ while (
     elif globalTime < min(arrivalLower, arrivalUpper):
         globalTime = arrivalLower
 
-    backOffLower = lower.getBackOff()
-    backOffUpper = upper.getBackOff()
+    backOffLower = lower.generateBackOff()
+    backOffUpper = upper.generateBackOff()
 
     if arrivalLower + DIFS + backOffLower < arrivalUpper + DIFS:
         """Lower transmits successfully"""

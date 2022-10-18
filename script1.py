@@ -52,7 +52,7 @@ while (
         globalTime = arrivalLower
 
     if arrivalLower + DIFS <= arrivalUpper:
-        backOffLower = lower.getBackOff()
+        backOffLower = lower.generateBackOff()
         if arrivalLower + DIFS + backOffLower <= arrivalUpper:
             """Lower transmits"""
             globalTime = lower.transmit(globalTime)
@@ -62,7 +62,7 @@ while (
                 """Lower transmits"""
                 transmitJob(lower)
             else:  # Starting here we need to account for backoff freezing
-                backOffUpper = upper.getBackOff()
+                backOffUpper = upper.generateBackOff()
                 if arrivalLower + DIFS + backOffLower < arrivalUpper + DIFS + backOffUpper:
                     """Lower transmits"""
                     globalTime = lower.transmit(globalTime)
@@ -81,13 +81,13 @@ while (
                     collisions += 1
 
     else:
-        backOffLower = lower.getBackOff()
+        backOffLower = lower.generateBackOff()
         if arrivalLower + DIFS + backOffLower <= arrivalUpper + DIFS:
             """Lower transmits"""
             globalTime = lower.transmit(globalTime)
             transmitJob(lower)
         else:  # Starting here we need to account for backoff freezing
-            backOffUpper = upper.getBackOff()
+            backOffUpper = upper.generateBackOff()
             if arrivalLower + DIFS + backOffLower < arrivalUpper + DIFS + backOffUpper:
                 """Lower transmits"""
                 globalTime = lower.transmit(globalTime)

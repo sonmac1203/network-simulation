@@ -26,7 +26,7 @@ while (globalTimeA <= SIMULATIONTIME // SLOTTIME or globalTimeC <= SIMULATIONTIM
     if packetArrivesFromA:
         globalTimeA = stationA.getArrivals()[stationA.getIndexVal()]
         if globalTimeA <= SIMULATIONTIME // SLOTTIME:  # If still within simulation time
-            backOffA = stationA.getBackOff()
+            backOffA = stationA.generateBackOff()
             stationB.recordsStationADoesTransmit()
             stationB.setPeriodOccupiedByA(globalTimeA + DIFS + backOffA, globalTimeA + DIFS + backOffA + FRAME)
 
@@ -34,7 +34,7 @@ while (globalTimeA <= SIMULATIONTIME // SLOTTIME or globalTimeC <= SIMULATIONTIM
     if packetArrivesFromC:
         globalTimeC = stationC.getArrivals()[stationC.getIndexVal()]
         if globalTimeC <= SIMULATIONTIME // SLOTTIME:  # If still within simulation time
-            backOffC = stationC.getBackOff()
+            backOffC = stationC.generateBackOff()
             stationB.recordsStationCDoesTransmit()
             stationB.setPeriodOccupiedByC(globalTimeC + DIFS + backOffC, globalTimeC + DIFS + backOffC + FRAME)
 
