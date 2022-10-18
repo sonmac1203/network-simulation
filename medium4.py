@@ -42,6 +42,8 @@ class Medium4:
         self.sendingCTS = False
         self.periodOfRTSFromLower = []
         self.periodOfRTSFromUpper = []
+        self.periodOfRTSFromA = []
+        self.periodOfRTSFromC = []
 
     def setPeriodOfRTSFromLower(self, s, e):
         self.periodOfRTSFromLower = [s, e]
@@ -49,9 +51,15 @@ class Medium4:
     def setPeriodOfRTSFromUpper(self, s, e):
         self.periodOfRTSFromUpper = [s, e]
 
+    def setPeriodOfRTSFromA(self, s, e):
+        self.periodOfRTSFromA = [s, e]
+
+    def setPeriodOfRTSFromC(self, s, e):
+        self.periodOfRTSFromC = [s, e]
+
     def hasRTSCollision(self):
-        startL = self.periodOfRTSFromLower[0]
-        endL = self.periodOfRTSFromLower[1]
-        startU = self.periodOfRTSFromUpper[0]
-        endU = self.periodOfRTSFromUpper[1]
+        startL = self.periodOfRTSFromA[0]
+        endL = self.periodOfRTSFromA[1]
+        startU = self.periodOfRTSFromC[0]
+        endU = self.periodOfRTSFromC[1]
         return startL < endU and endL > startU
