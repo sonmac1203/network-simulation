@@ -17,12 +17,14 @@ upper = Station()
 globalTime = 0
 collisions = 0
 
-testA = [0, 1000, 2000]
-testC = [0, 1007, 3000]
+# testA = [0, 1000, 2000]
+# testC = [0, 1007, 3000]
 
-# print(stationA.getArrivals()[:10])
-# print("\n")
-# print(stationC.getArrivals()[:10])
+# stationA.setArrivals(testA)
+# stationC.setArrivals(testC)
+
+print(stationA.getArrivals()[:10])
+print(stationC.getArrivals()[:10])
 
 while (
     globalTime <= SIMULATIONTIME // SLOTTIME
@@ -30,50 +32,48 @@ while (
     and stationC.getIndexVal() < seriesLen
 ):
 
-    arrivalTimeA = stationA.getArrivals()[stationA.getIndexVal()]
-    arrivalTimeC = stationC.getArrivals()[stationC.getIndexVal()]
+    arrivalTimeA = stationA.getArrivalTime()
+    arrivalTimeC = stationC.getArrivalTime()
 
-    # arrivalTimeA = testA[stationA.getIndexVal()]
-    # arrivalTimeC = testC[stationC.getIndexVal()]
+    globalTime = min(arrivalTimeA, arrivalTimeC)
 
-    if arrivalTimeA <= arrivalTimeC:
-        lower = stationA
-        upper = stationC
-    else:
-        lower = stationC
-        upper = stationA
+    backOffA = stationA.generateBackOff()
+    backOffC = stationC.generateBackOff()
 
-    arrivalLower = min(arrivalTimeA, arrivalTimeC)
-    arrivalUpper = max(arrivalTimeA, arrivalTimeC)
-
-    if globalTime >= min(arrivalLower, arrivalUpper):
-        arrivalLower = globalTime
-    elif globalTime < min(arrivalLower, arrivalUpper):
-        globalTime = arrivalLower
-
-    backOffLower = lower.getBackOff()
-    backOffUpper = upper.getBackOff()
-
-    stationB.setPeriodOfRTSFromLower(arrivalLower + DIFS + backOffLower, arrivalLower + DIFS + backOffLower + RTS)
-    stationB.setPeriodOfRTSFromUpper(arrivalUpper + DIFS + backOffUpper, arrivalUpper + DIFS + backOffUpper + RTS)
+    stationB.setPeriodOfRTSFromA(arrivalTimeA + DIFS + backOffA, arrivalTimeA + DIFS + backOffA + RTS)
+    stationB.setPeriodOfRTSFromC(arrivalTimeC + DIFS + backOffC, arrivalTimeC + DIFS + backOffC + RTS)
 
     if stationB.hasRTSCollision():
         """Has a RTS Collision"""
         collisions += 1
-        lower.jump()
-        lower.freeBackOff()
-        lower.doubleCW()
-        upper.jump()
-        upper.freeBackOff()
-        upper.doubleCW()
+
+        stationA.freeBackOff()
+        stationA.doubleCW()
+        stationA.jump()
+
+        stationC.freeBackOff()
+        stationC.doubleCW()
+        stationC.jump()
     else:
-        if arrivalLower + backOffLower > arrivalUpper + backOffUpper:  # swap in case lower goes ahead
-            lower, upper = upper, lower
+        if arrivalTimeA + backOffA > arrivalTimeC + backOffC:
+            lower = stationC
+            upper = stationA
+        else:
+            lower = stationA
+            upper = stationC
+
+        # Declarations for lower and upper
+        arrivalLower = lower.getArrivalTime()
+        backOffLower = lower.getBackOff()
+        arrivalUpper = upper.getArrivalTime()
+        backOffUpper = upper.getBackOff()
+
         """Lower transmits successfully"""
         lower.recordASuccess()
         lower.jump()
         lower.resetCW()
         lower.freeBackOff()
+
         if (
             arrivalLower + DIFS + backOffLower + RTS
             <= arrivalUpper + DIFS + backOffUpper
@@ -85,9 +85,10 @@ while (
             upper.jump()
             collisions += 1
         else:
-            # if and else here
             transmissionSpan = arrivalLower + DIFS + backOffLower + RTS + SIFS + CTS + SIFS + FRAME + SIFS + ACK
-            if arrivalUpper + DIFS + backOffUpper >= transmissionSpan:
+
+            # check on this again
+            if arrivalUpper >= transmissionSpan:
                 """Upper transmits successfully"""
                 upper.recordASuccess()
                 upper.resetCW()
@@ -99,16 +100,17 @@ while (
                     upper.freezeBackOff()
                     diff = arrivalUpper + backOffUpper - (arrivalLower + backOffLower + RTS + SIFS + CTS)
                     upper.setBackOff(diff)
+                    upper.setArrivalTime(transmissionSpan)
                 else:
                     pass
 
-    # Assign back to A and C
-    if arrivalTimeA <= arrivalTimeC:
-        stationA = lower
-        stationC = upper
-    else:
-        stationC = lower
-        stationA = upper
+    if stationB.hasRTSCollision() is not True:
+        if arrivalTimeA + backOffA > arrivalTimeC + backOffC:
+            stationC = lower
+            stationA = upper
+        else:
+            stationA = lower
+            stationC = upper
 
 print("\nNumber at successes at station A: " + str(stationA.getSuccesses()) + "\n")
 print("Number at successes at station C: " + str(stationC.getSuccesses()) + "\n")
